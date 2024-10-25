@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+open(INFILE, "FOUND/BasicInfo") or die "impossible to open BasicInfo";
+@BAS=<INFILE>;
+close(INFILE);
+
+$_=$BAS[0];
+s/\n//;
+$NBRO=$_;
+
+open(INFILE, "Computations/IncidentExt");
+@EXT=<INFILE>;
+close(INFILE);
+
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    $OrbitFile="FOUND/Orbit".$iOrb;
+    open(INF, $OrbitFile);
+    @FAC=<INF>;
+    close(INF);
+    @LineFac=split(" ", $FAC[0]);
+    $dimension=scalar(@LineFac)-1;
+    $nb=0;
+    for ($iExt=1; $iExt<=scalar(@EXT); $iExt++)
+    {
+	@L=split(" ", $EXT[$iExt-1]);
+	$Sum=0;
+	for ($iCol=1; $iCol<=$dimension; $iCol++)
+	{
+	    $Sum+=$LineFac[$iCol]*$L[$iCol];
+	}
+	if ($Sum eq 0)
+	{
+	    $nb++;
+	}
+    }
+    print $nb."\n";
+}

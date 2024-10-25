@@ -1,0 +1,176 @@
+#!/usr/bin/perl
+
+#
+#
+# generation of the symmetry group of HYP7 and CUT7
+print "Creating the symetry group\n";
+$nPerm=7;
+$Mantisse=$nPerm+1;
+$lists[$Mantisse]=1;
+
+$Fact=1;
+for ($NB=2; $NB <=$nPerm; $NB++)
+{
+    $kil=1;
+    for ($Pos=0; $Pos <$NB; $Pos++)
+    {
+	for ($co=1; $co<=$Fact; $co++)
+	{
+	    $kn=0;
+	    $ko=0;
+	    $NbElt=$NB-1;
+	    while ($kn< $NbElt+1)
+	    {
+		if ($kn eq $Pos)
+		{
+		    $Newlists[$kil*$Mantisse+$kn]=$NB;
+		    $kn++;
+		}
+		else
+		{
+		    $Newlists[$kil*$Mantisse+$kn]=$lists[$co*$Mantisse+$ko];
+		    $kn++;
+		    $ko++;
+		}
+	    }
+	    $kil++;
+	}
+    }
+    $Fact=$Fact*$NB;
+    @lists=@Newlists;
+}
+
+@L=();
+for ($i=1; $i<=$nPerm-1; $i++)
+{
+    for ($j=$i+1; $j<=$nPerm; $j++)
+    {
+	$L[scalar(@L)]=$i.$j;
+    }
+}
+
+
+open(OUT, "> FOUND/ReprS7");
+for ($iPerm=1; $iPerm<= $Fact; $iPerm++)
+{
+    for ($i=1; $i<=$nPerm-1; $i++)
+    {
+	for ($j=$i+1; $j<=$nPerm; $j++)
+	{
+	    $k=$lists[$iPerm*$Mantisse+$i-1];
+	    $l=$lists[$iPerm*$Mantisse+$j-1];
+	    if ($k<$l)
+	    {
+		$che=$k.$l;
+	    }
+	    else
+	    {
+		$che=$l.$k;
+	    }
+	    $pos=1;
+	    while(1)
+	    {
+		if ($L[$pos-1] eq $che)
+		{
+		    last;
+		}
+		$pos++;
+	    }
+	    print OUT $pos." ";
+	}
+    }
+    print OUT "\n";
+}
+close(OUT);
+
+
+
+#
+#
+# generation of the facets of HYP7 from the Baranovskii list
+$nbOrbFac=0;
+open(INFILE, "DataCUT7_HYP7/ListOrbitFacetHYP7");
+open(OUT, "> FOUND/ListOrbitFacetHYP7.sec");
+while (<INFILE>)
+{
+    $line=$_;
+    @vector=split(" ", $line);
+    $n=scalar(@vector);
+
+    print OUT " 0";
+    for ($i=1; $i<=$n-1; $i++)
+    {
+        for ($j=$i+1; $j<=$n; $j++)
+        {
+            $uu=$vector[$i-1]*$vector[$j-1];
+            if ($uu eq 0)
+            {
+                $outV=0;
+            }
+            else
+            {
+                $outV=-$uu;
+            }
+            print OUT " ".$outV;
+        }
+    }
+    print OUT "\n";
+    $nbOrbFac++;
+}
+close(OUT);
+close(INFILE);
+
+$order="touch FOUND/HYP7";
+print $order."\n";
+system $order;
+
+for ($iOrbF=1; $iOrbF<=$nbOrbFac; $iOrbF++)
+{
+    $order="./BuildOrbit FOUND/ListOrbitFacetHYP7.sec FOUND/ReprS7 ".$iOrbF." | ./PerlSort | uniq >> FOUND/HYP7";
+    print $order."\n";
+    system $order;
+}
+
+
+
+#
+#
+# generation of the extreme rays of CUT7
+$nbOrbExt=0;
+open(INFILE, "DataCUT7_HYP7/ListOrbitExtremeCUT7");
+open(OUT, "> FOUND/ListOrbitExtremeCUT7.sec");
+while (<INFILE>)
+{
+    s/\n//;
+    @EL=split(" ", $_);
+    print OUT " 0";
+    for ($i=1; $i<=scalar(@EL)-1; $i++)
+    {
+	for ($j=$i+1; $j<=scalar(@EL); $j++)
+	{
+	    if ($EL[$i-1] eq $EL[$j-1])
+	    {
+		print OUT " 0";
+	    }
+	    else 
+	    {
+		print OUT " 1";
+	    }
+	}
+    }
+    print OUT "\n";
+    $nbOrbExt++;
+}
+close(OUT);
+close(INFILE);
+
+$order="touch FOUND/CUT7";
+print $order."\n";
+system $order;
+
+for ($iOrbE=1; $iOrbE<=$nbOrbExt; $iOrbE++)
+{
+    $order="./BuildOrbit FOUND/ListOrbitExtremeCUT7.sec FOUND/ReprS7 ".$iOrbE." | ./PerlSort | uniq >> FOUND/CUT7";
+    print $order."\n";
+    system $order;
+}

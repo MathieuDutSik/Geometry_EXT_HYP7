@@ -1,0 +1,183 @@
+#!/usr/bin/perl
+
+open(INFILE, "FOUND/BasicInfo") or die "impossible to open BasicInfo";
+@BAS=<INFILE>;
+close(INFILE);
+
+$_=$BAS[0];
+s/\n//;
+$NBRO=$_;
+
+$dimension=22;
+
+print "Setting them all non-redundant\n";
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    $IRRED[$iOrb]=1;
+}
+
+#
+#
+# We get the sizes of the orbits
+
+print "Getting size of Orbits\n";
+open(INFILE, "Computations/TheSizes") or die "impossible to open TheSizes";
+@BUZ=<INFILE>;
+close(INFILE);
+
+print "Getting Incidence Numbers\n";
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    $_=$BUZ[$iOrb-1];
+    s/\n//;
+    $nbuz=$_;
+    $SIZE[$iOrb]=$nbuz;
+}
+
+#
+#
+# We get the incidence numbers
+
+print "Getting the incidence numbers\n";
+open(INFILE, "Computations/ListIncidentNumbers") or die "impossible to open Computations/ListIncidentNumbers";
+@BUL=<INFILE>;
+close(INFILE);
+
+print "Getting Incidence Numbers\n";
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    $_=$BUL[$iOrb-1];
+    s/\n//;
+    $nbul=$_;
+    $NBINCIDENT[$iOrb]=$nbul;
+}
+
+$NegFile="Computations/Negated";
+open(INFILE, $NegFile) or die "impossible to open ".$NegFile;
+@B=<INFILE>;
+close(INFILE);
+$Neg=$B[0];
+
+
+
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    if ($NBINCIDENT[$iOrb]<= 18 && $IRRED[$iOrb] eq 1)
+    {
+	$order="/bin/rm -f Computations/fi.*";
+	print $order."\n";
+	system $order;
+	
+	# get the size of our testbed
+	$Total=1;
+	for ($jOrb=1; $jOrb<=$NBRO; $jOrb++)
+	{
+	    if ($IRRED[$jOrb] eq 1 && $iOrb ne $jOrb && $NBINCIDENT[$jOrb]>=19)
+	    {
+		$Total=$Total+$SIZE[$jOrb];
+	    }
+	}
+	
+	
+	# Creating the test file
+	$TheFile="> Computations/fi.ine";
+	open(OUT, $TheFile) or die "impossible to open ".$TheFile;
+	print OUT "H-representation\n";
+	print OUT "begin\n";
+	print OUT $Total." ".$dimension." integer\n";
+	for ($jOrb=1; $jOrb<=$NBRO; $jOrb++)
+	{
+	    if ($IRRED[$jOrb] eq 1 && $jOrb ne $iOrb && $NBINCIDENT[$jOrb] >=19)
+	    {
+		$OrbitFile="FOUND/Orbit".$jOrb;
+		open(INFILE, $OrbitFile) or die "impossible to open ".$OrbitFile;
+		@B=<INFILE>;
+		close(INFILE);
+		print OUT @B;
+	    }
+	}
+	print OUT $Neg;
+	print OUT "end\n";
+	print OUT "minimize\n";
+	
+	# the inequality to be tested
+	$OrbitFile="FOUND/Orbit".$iOrb;
+	open(INFILE, $OrbitFile) or die "impossible to open ".$OrbitFile;
+	@B=<INFILE>;
+	close(INFILE);
+	print OUT $B[0];
+	close(OUT);
+	
+	# launch cdd on the problem using simplex method.
+	$order="cddr+_gmp Computations/fi.ine";
+	print $order."\n";
+	system $order;
+	
+	open(INFILE, "Computations/fi.lps");
+	@B=<INFILE>;
+	close(INFILE);
+	
+	$InDeX=0;
+	while (1)
+	{
+	    $line=$B[$InDeX];
+	    $_=$line;
+	    s/\n//;
+	    $line=$_;
+	    if ($line eq "end")
+	    {
+		last;
+	    }
+	    $InDeX++;
+	}
+
+
+	
+	$line=$B[$InDeX-1];
+	$_=$line;
+	s/\n//;
+	$line=$_;
+	if ($line eq "  optimal_value : 0")
+	{
+	    print "Orbit ".$iOrb." is redundant\n";
+	    $IRRED[$iOrb]=0;
+	}
+	else
+	{
+	    print "Orbit ".$iOrb." is POSSIBLY non redundant\n";
+	    # WE KEEP IT!
+	}
+    }
+}
+
+#
+#
+# Print OUT the datas
+
+$NBL=1;  # the negated inequality
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    if ($IRRED[$iOrb] eq 1)
+    {
+	$NBL=$NBL+$SIZE[$iOrb];
+    }
+}
+
+open(OUT, "> Computations/NudeRefinatedFacetFile.ine");
+print OUT "H-representation\n";
+print OUT "begin\n";
+print OUT $NBL." ".$dimension." integer\n";
+for ($iOrb=1; $iOrb<=$NBRO; $iOrb++)
+{
+    if ($IRRED[$iOrb] eq 1)
+    {
+	$OrbitFile="FOUND/Orbit".$iOrb;
+	open(INFILE, $OrbitFile) or die "impossible to open ".$OrbitFile;
+	@B=<INFILE>;
+	close(INFILE);
+	print OUT @B;
+    }
+}
+print OUT $Neg;
+print OUT "end\n";
+close(OUT);

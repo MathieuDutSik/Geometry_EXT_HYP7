@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+
+$EltFile=$ARGV[0];
+$ReprFile=$ARGV[1];
+
+#
+#
+# Clean and set the Scene
+
+$order="cat ".$ARGV[0]." | ./PerlSort > FOUND/EXT.in";
+print $order."\n";
+system $order;
+
+open(OUTSIZE, "> Computations/TheSizes");
+
+$i=1;
+while (1)
+{
+    $order="./BuildOrbit FOUND/EXT.in ".$ARGV[1]." 1 | ./PerlSort | uniq > FOUND/Orbit".$i;
+    print $order."\n";
+    system $order;
+
+    $OrbitFile="FOUND/Orbit".$i;
+    open(INFILE, $OrbitFile) or die "impossible to open".$OrbitFile;
+    @B=<INFILE>;
+    close(INFILE);
+    print OUTSIZE scalar(@B)."\n";
+
+    $order="./DifferenceSet.Variante1 FOUND/EXT.in FOUND/Orbit".$i." > FOUND/EXT.out";
+    print $order."\n";
+    system $order;
+
+    $order="mv -f FOUND/EXT.out FOUND/EXT.in";
+    print $order."\n";
+    system $order;
+
+    #
+    #
+    # Test if we are at the end of Orbit findings
+    open(INFILE, "FOUND/EXT.in");
+    @B=<INFILE>;
+    close(INFILE);
+    $size=scalar(@B);
+
+    if ($size eq 0)
+    {
+	last;
+    }
+    $i++
+}
+close(OUTSIZE);
+$NBO=$i;
+
+
+open(OUTBASIC, "> FOUND/BasicInfo") or die "impossible to open BasicInfo";
+print OUTBASIC $NBO."\n";
+close(OUTBASIC);

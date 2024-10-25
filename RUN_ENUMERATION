@@ -1,0 +1,171 @@
+#!/usr/bin/perl
+
+# This script is the main script for the enumeration
+# of extreme ray of HYP7, 
+
+
+$order="rm -f ListOrbit && touch ListOrbit";
+print $order."\n";
+system $order;
+
+$order="rm -rf FOUND && mkdir FOUND";
+print $order."\n";
+system $order;
+
+$order="./CreateSetting";
+print $order."\n";
+system $order;
+
+open(INFILE, "FOUND/ReprS7");
+@GROUP=<INFILE>;
+close(INFILE);
+
+open(INFILE, "DataCUT7_HYP7/ListOrbitFacetCUT7");
+@FACET=<INFILE>;
+close(INFILE);
+
+# begin at 9 and finish at 34
+for ($i=9; $i<=34; $i++)
+{
+    $order="mkdir Computations";
+    print $order."\n";
+    system $order;
+
+    open(OUT, "> Computations/ReprOrbitFacetCUT7");
+    print OUT $FACET[$i-1];
+    close(OUT);
+
+    open(INFILE, "Computations/ReprOrbitFacetCUT7");
+    @B=<INFILE>;
+    close(INFILE);
+    @Element=split(" ", $B[0]);
+    open(OUT, "> Computations/StabilizerOfFacet");
+    for ($iGrp=1; $iGrp<=scalar(@GROUP); $iGrp++)
+    {
+	@PERM=split(" ", $GROUP[$iGrp-1]);
+	$TEST=0;
+	$iter=1;
+	while($iter<=scalar(@PERM))
+	{
+	    if ($Element[$PERM[$iter-1]] ne $Element[$iter])
+	    {
+		$TEST=1;
+		last;
+	    }
+	    $iter++;
+	}
+	if ($TEST eq 0)
+	{
+	    print OUT $GROUP[$iGrp-1];
+	}
+    }
+    close(OUT);
+
+
+    #
+    open(INFILE, "Computations/ReprOrbitFacetCUT7");
+    @B=<INFILE>;
+    close(INFILE);
+    @line=split(" ", $B[0]);
+    $dimension=scalar(@line)-1;
+    open(OUT, "> Computations/IncidentExt");
+    open(INF, "FOUND/CUT7");
+    @EXT=<INF>;
+    close(INF);
+    
+    for ($iExt=1; $iExt<=scalar(@EXT); $iExt++)
+    {
+	@UU=split(" ", $EXT[$iExt-1]);
+	$Total=0;
+	for ($iCol=1; $iCol<=$dimension; $iCol++)
+	{
+	    $Total+=$UU[$iCol]*$line[$iCol];
+	}
+	if ($Total eq 0)
+	{
+	    print OUT $EXT[$iExt-1];
+	}
+    }
+    close(OUT);
+
+    $order="./BuildOrbitFiles FOUND/HYP7 Computations/StabilizerOfFacet";
+    print $order."\n";
+    system $order;
+
+    $order="./GiveIncidenceNumbers > Computations/ListIncidentNumbers";
+    print $order."\n";
+    system $order;
+
+    open(INFILE, "Computations/ReprOrbitFacetCUT7");
+    @B=<INFILE>;
+    close(INFILE);
+    @LINE=split(" ", @B[0]);
+    open(OUT, "> Computations/Negated");
+    for ($iCol=1; $iCol<=scalar(@LINE); $iCol++)
+    {
+	$_=-$LINE[$iCol-1];
+	s/\n//;
+	s/\+//;
+	s/-0/0/;
+	print OUT " ".$_;
+    }
+    print OUT "\n";
+    close(OUT);
+
+    $order="./RemoveByLinearProgramming";
+    print $order."\n";
+    system $order;
+
+    $order="cddr+_gmp Computations/NudeRefinatedFacetFile.ine";
+    print $order."\n";
+    system $order;
+    
+    open(INFILE, "Computations/NudeRefinatedFacetFile.ext");
+    @B=<INFILE>;
+    close(INFILE);
+    
+    open(OUT, "> Computations/NudeRefinatedFacetFile.ext.Nude");
+    $iLine=0;
+    while (1)
+    {
+	if ($B[$iLine] eq "begin\n")
+	{
+	    last;
+	}
+	$iLine++;
+    }
+    $jLine=$iLine+2;
+    while (1)
+    {
+	if ($B[$jLine] eq "end\n")
+	{
+	    last;
+	}
+	else
+	{
+	    print OUT $B[$jLine];
+	}
+	$jLine++;
+    }
+    close(OUT);
+    
+    $order="./DifferenceSet Computations/NudeRefinatedFacetFile.ext.Nude Computations/IncidentExt > Computations/ResultatOrbit";
+    print $order."\n";
+    system $order;
+    
+    $order="cat Computations/ResultatOrbit >> ListOrbit";
+    print $order."\n";
+    system $order;
+
+    $order="mv Computations ComputationOrbit".$i;
+    print $order."\n";
+    system $order;
+
+    $order="rm FOUND/EXT* FOUND/BasicInfo";
+    print $order."\n";
+    system $order;
+
+    $order="ls FOUND/Orbit* | xargs rm";
+    print $order."\n";
+    system $order;
+}

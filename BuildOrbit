@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+$EltFile=$ARGV[0];
+$GroupFile=$ARGV[1];
+$nb=$ARGV[2];
+
+
+open(KFOR, $EltFile) or die "impossible to open ".$EltFile;
+@KF=<KFOR>;
+close(KFOR);
+$line=$KF[$nb-1];
+
+@LS=split(" ", $line);
+$dimension=scalar(@LS)-1;
+
+
+open(INFILE, $GroupFile) or die "impossible de trouver le fichier ".$GroupFile;
+while (<INFILE>)
+{
+    $TheLine=$_;
+    @permind=split(" ", $TheLine);
+    print " 0";
+    for ($i=1; $i<=$dimension; $i++)
+    {
+	print " ".$LS[$permind[$i-1]];
+    }
+    print "\n";
+}
+close(INFILE);

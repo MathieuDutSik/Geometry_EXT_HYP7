@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+$File=$ARGV[0];
+open(INFILE, $File) or die "impossible to open ".$File;
+@LisA=<INFILE>;
+close(INFILE);
+
+$File=$ARGV[1];
+open(INFILE, $File) or die "impossible to open ".$File;
+@LisB=sort(<INFILE>);
+close(INFILE);
+
+$ia=1;
+$ib=1;
+while(1)
+{
+    if ($LisB[$ib-1] lt $LisA[$ia-1])
+    {
+	if ($ib eq scalar(@LisB) )
+	{
+	    print $LisA[$ia-1];
+	    $ia++;
+	}
+	else
+	{
+	    $ib++;
+	}
+    }
+    else
+    {
+	if ($LisA[$ia-1] eq $LisB[$ib-1])
+	{
+	    $ia++;
+	}
+	else
+	{
+	    print $LisA[$ia-1];
+	    $ia++;
+	}
+    }
+    if ($ia eq scalar(@LisA)+1)
+    {
+	last;
+    }
+
+}

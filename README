@@ -1,0 +1,64 @@
+    EXT-HYP7
+
+This program computes all the extreme rays of the cone HYP7.
+The last version of this program is available from
+http://drobilica.irb.hr/~mathieu/
+
+This program use:
+
+the "dreadnaut" program from the nauty package 
+http://cs.anu.edu.au/~bdm/nauty/
+
+the "cdd" polyhedral program by Komei Fukuda
+http://www.cs.mcgill.ca/~fukuda/soft/cdd_home/cdd.html
+
+Both cddr+_gmp should be available from the command line.
+Also perl should be in /usr/bin/perl
+
+This program computes the list of all 26 orbits and extreme rays
+
+AUTHOR  : Mathieu Dutour
+e-mail  : Mathieu.Dutour@gmail.com
+homePage: http://drobilica.irb.hr/~mathieu/
+
+   HOW TO RUN THE ENUMERATION (on linux)
+
+Extract the archive
+tar -vxzf EXT-HYP7.tar.gz
+
+Go into the archive
+cd EXT-HYP7
+
+run the program by
+./RUN_ENUMERATION
+
+   HOW TO GET THE DATAS
+
+The list of 26 orbits of extreme rays is available in ListOrbit.
+
+   TODO
+
+The whole enumeration take as granted that we know the list of
+3773 facets and 37170 extreme rays of the hypermetric cone HYP7. 
+
+Those lists were actually computed by Baranovskii and M.Dutour.
+At present they are in the directory WORK-PERM but they should
+be generated at the beginning of the computation.
+
+      REFERENCES
+
+E.P. Baranovskii, "About L-simplexes of $6$-dimensional lattices", 
+Second International conference ``Algebraic, Probabilistic, Geometrical,
+Combinatorial and Functional Methods in the theory of numbers'' (1995)
+(in Russian).
+
+E.P. Baranovskii, {\em The conditions for a simplex of $6$-dimensional
+lattice to be $L$-simplex}, (in Russian) Nauchnyie Trudi Ivanovo state
+university. Mathematica, {\bf 2} (1999) 18--24.
+
+Mathieu Dutour, Michel Deza, "The hypermetric cone on seven vertices"
+http://www.arxiv.org/abs/math.MG/0108177
+
+Mathieu Dutour, "The six-dimensional Delaunay polytopes"
+http://www.arxiv.org/abs/math.MG/0212353
+
